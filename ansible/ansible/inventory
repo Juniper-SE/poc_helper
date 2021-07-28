@@ -1,0 +1,38 @@
+[all:vars]
+ansible_user=jnpr
+ansible_password=juniper1
+
+[srx]
+srx4600-1 ansible_host=172.25.61.38
+srx4600-2 ansible_host=172.25.61.39
+srx4600-3 ansible_host=172.25.61.49
+srx4200-1 ansible_host=172.25.61.50
+srx4200-2 ansible_host=172.25.61.51
+srx380-1 ansible_host=172.25.61.52
+srx380-2 ansible_host=172.25.61.53
+srx320-1 ansible_host=172.25.61.81
+srx320-2 ansible_host=172.25.61.82
+
+[qfx]
+qfx5120-48y-1 ansible_host=172.25.61.58
+qfx5120-48y-2 ansible_host=172.25.61.59
+qfx5120-48t-1 ansible_host=172.25.61.78
+qfx5120-48t-2 ansible_host=172.25.61.80
+
+[mx]
+mx204-1 ansible_host=172.25.61.65
+mx204-2 ansible_host=172.25.61.66
+
+[nfx]
+nfx150-1 ansible_host=172.25.61.54
+nfx150-2 ansible_host=172.25.61.55
+nfx150-3 ansible_host=172.25.61.56
+
+[cpe]
+srx4600-3 ansible_host=172.25.61.49
+srx4200-1 ansible_host=172.25.61.50
+srx4200-2 ansible_host=172.25.61.51
+srx380-1 ansible_host=172.25.61.52
+srx380-2 ansible_host=172.25.61.53
+srx320-1 ansible_host=172.25.61.81
+srx320-2 ansible_host=172.25.61.82

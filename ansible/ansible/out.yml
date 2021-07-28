@@ -1,0 +1,21 @@
+---
+- name: Run the command or configuration on devices
+  hosts: all
+  roles:
+    - Juniper.junos
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: Configure Juniper device
+      juniper_junos_command:
+        provider:
+          host: "{{ ansible_host }}"
+          user: "jnpr"
+        commands:
+          - show ntp ass
+      register: junos_result
+
+    - name: Print response
+      debug:
+        var: junos_result.stdout_lines

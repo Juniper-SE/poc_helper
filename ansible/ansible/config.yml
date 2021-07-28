@@ -1,0 +1,16 @@
+---
+- name: Run the command or configuration on devices
+  hosts: mx
+  roles:
+    - Juniper.junos
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: Configure Juniper device
+      juniper_junos_config:
+        provider:
+          host: "{{ ansible_host }}"
+          user: "jnpr"
+        lines:
+          - set interface ge-0/0/0 description Test

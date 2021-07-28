@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+
+import sys
+import re
+import os
+import argparse
+import subprocess
+from jinja2 import Template
+
+# Look to see if the host(s) from the cmd line is in the 'inventory' file
+def inventory_chk(inventory, hosts):
+    print("3 Inventory: ", inventory)
+    print("Hosts: ", hosts)
+#    for i, line in enumerate(open('inventory','r')):
+    for i, line in enumerate(open(inventory, 'r')):
+       print(line)
+       for h in hosts:
+            print("Host:", h)
+            
+            if h in line:
+                return True
+    return False
+
+#----
+# Read the command line arguments
+parser = argparse.ArgumentParser(description='Run an ansible playbook on POC devices.')
+parser.add_argument('--config', action='store', help='send a configuration to the device in set format')
+parser.add_argument('--cmd', "--command", action='store', help='send a configuration to the device in set format')
+parser.add_argument('-o', '--out', action='store', metavar='filename', help='write output to a file')
+parser.add_argument('-i', '--inventory', action='store', metavar='filename', help='Name of inventory file')
+parser.add_argument('hosts', nargs='+', help='which devices to configure or command')
+
+args = parser.parse_args()
+print(args)
+
+# Do we have a valid device/group?
+if args.inventory:
+#    print("1 Inventory: ", args.inventory)
+    if not os.path.isfile('inventory'):
+        print("Inventory file: {} missing!".format(args.inventory))
+        sys.exit()
+    inventory = args.inventory
+elif os.path.isfile('inventory'):
+#    print("2 Inventory: ", 'inventory')
+    inventory = 'inventory'
+elif os.path.isfile('/etc/ansible/hosts'):
+    inventory = '/etc/ansible/hosts'
+else:
+    print("No inventory file found!")
+    sys.exit()
+        
+
+print("Inventory: ", inventory)
+        
+if (not inventory_chk(inventory, args.hosts)):
+    print("{} is not in the inventory file!".format(args.hosts))
+    sys.exit()
+    
+# Print help message if not enough arguments supplied
+if not args.config and not args.cmd:
+    print("You must choose configure or command.")
+    sys.exit()
+
+
+filename = 'out.yml'
+lines = ''
+
+# Convert the hosts list into a string
+hosts = ' '.join([str(h) for h in args.hosts])
+print ("Hosts:", hosts)
+                 
+# Is this run for a config?
+if args.config:
+    for val in args.config.split("\n"):        
+        lines += "          - " + val +"\n"
+    print("Lines: ", lines)
+
+# Jinja2 template for ansible config run
+    teml ='''---
+- name: Run the command or configuration on devices
+  hosts: {{hosts}}
+  roles:
+    - Juniper.junos
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: Configure Juniper device
+      juniper_junos_config:
+        provider:
+          host: "{% raw %}{{ ansible_host }}{% endraw %}"
+          user: "jnpr"
+        comment: Brought to you by PocHelper
+        load: set
+        lines:
+{{lines}}
+'''
+
+# This is a command run
+elif args.cmd:
+#    for val in args.cmd[0].split("\n"):
+    for val in args.cmd.split("\n"):    
+        lines += "- " + val
+    print("Lines: ", lines)
+    teml ='''---
+- name: Run the command or configuration on devices
+  hosts: {{hosts}}
+  roles:
+    - Juniper.junos
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: Configure Juniper device
+      juniper_junos_command:
+        provider:
+          host: "{% raw %}{{ ansible_host }}{% endraw %}"
+          user: "jnpr"
+        commands:
+          {{lines}}
+      register: junos_result
+
+    - name: Print response
+      debug:
+        var: junos_result.stdout_lines
+'''
+
+# End cmd
+
+# Render the template
+tp = Template(teml)
+yml = tp.render(hosts=hosts, lines=lines)
+
+# Write our template to out.yml
+with open(filename, 'w') as write_file:
+    write_file.writelines(yml)
+
+print(yml)
+
+ansible_command = "ansible-playbook " + filename + " -i " + inventory
+print(ansible_command)
+
+
+if args.out:
+    logfile = open(args.out, 'w+')    
+    proc = subprocess.Popen(ansible_command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in proc.stdout:
+        sys.stdout.write(line.decode('utf-8'))
+        logfile.write(line.decode('utf-8'))
+    proc.wait()
+else:
+    proc = subprocess.Popen(ansible_command.split())
+    proc.wait()
+
+sys.exit()
+
+        

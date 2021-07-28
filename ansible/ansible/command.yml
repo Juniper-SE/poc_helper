@@ -1,0 +1,22 @@
+---
+- name: Run the command or configuration on devices
+  hosts: srx
+  roles:
+    - Juniper.junos
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: Send a command to Juniper device
+      juniper_junos_command:
+        provider:
+          host: "{{ ansible_host }}"
+          user: "jnpr"
+        commands:
+          - show version
+      register: junos_result
+
+    - name: Print response
+      debug:
+        var: junos_result.stdout_lines
+
