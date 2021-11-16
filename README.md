@@ -34,3 +34,5 @@ To modify for your POC:
 Examples:
 - `./pochelper nfx --cmd "show version"`
 - `./pochelper nfx --configure "set interfaces ge-0/0/0.0 family inet address 1.1.1.1" -o output_file.txt`
+
+This project was made with the help of Erik Sherk (sherk@juniper.net) and used in conjuction with a large customer POC.
